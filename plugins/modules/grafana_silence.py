@@ -275,8 +275,13 @@ class GrafanaSilenceInterface(object):
         )
         version = response.get("version")
         if version is not None:
-            major, minor, rev = version.split(".")
-            return {"major": int(major), "minor": int(minor), "rev": int(rev)}
+            try:
+                # Split the version by '-' to handle the build number
+                version_main, build_number = version.split("-")
+                major, minor, rev = version_main.split(".")
+                return {"major": int(major), "minor": int(minor), "rev": int(rev), "build": build_number}
+            except ValueError:
+                raise GrafanaError(f"Unexpected version format: '{version}'")
         raise GrafanaError("Failed to retrieve version from '%s'" % url)
 
     def create_silence(self, comment, created_by, starts_at, ends_at, matchers):
